@@ -47,9 +47,8 @@
     // 6) 내비게이션 (초기 렌더)
     buildNav(cfg.nav || []);
 
-    // 7) Hero
+    // 7) Hero (안전 프리로드 적용)
     setHeroBackground(cfg.site?.heroBackgroundPath);
-
     setText('#heroHeadline', cfg.hero?.headline || '');
     setText('#heroSubhead', cfg.hero?.subhead || '');
     setLink('#heroCta', cfg.hero?.ctaHref || '#', cfg.hero?.ctaLabel || '');
@@ -82,7 +81,6 @@
     setText('#addrLabel', cfg.labels?.address || '');
     setText('#telLabel', cfg.labels?.phone || '');
     setText('#mailLabel', cfg.labels?.email || '');
-
     setText('#contactAddress', cfg.contact?.address || '');
     if (cfg.contact?.phone) setLink('#contactPhone', `tel:${cfg.contact.phone}`, cfg.contact.phone);
     if (cfg.contact?.email) {
@@ -143,7 +141,6 @@
     // Contact (SNS/지도 포함)
     const socialHas = sectionEnabled('social') && Object.values(cfg.social || {}).some(Boolean);
     if (!socialHas) { const s = $('#socialLinks'); if (s) s.style.display = 'none'; }
-
     const mapEnabled = sectionEnabled('mapEmbed') && !!cfg.contact?.mapEmbed;
     if (!mapEnabled) {
       // #mapEmbed 비어 있으면 1열 정리
@@ -345,17 +342,6 @@
   function openTerms()   { $('#dlgTerms')?.showModal(); }
 
   /* ====== Kakao Roughmap Embed ====== */
-  function loadScriptOnce(url, className = "") {
-    return new Promise((resolve, reject) => {
-      let s = className ? document.querySelector(`script.${className}`) : null;
-      if (s) { if (window.daum?.roughmap) resolve(); else s.addEventListener('load', resolve); return; }
-      s = document.createElement('script');
-      if (className) s.className = className;
-      s.src = url; s.charset = "UTF-8";
-      s.onload = resolve; s.onerror = reject;
-      document.head.appendChild(s);
-    });
-  }
   function parseAspect(v) {
     if (typeof v === 'number' && v > 0) return v;
     const m = String(v || '').trim().match(/^(\d+)\s*[:/]\s*(\d+)$/);
@@ -391,30 +377,24 @@
         "mapHeight": String(embed.height || 360)
       }).render();
 
-      // 반응형 처리
+      // 반응형 + 내부 고정 px 교정
+      const ar = parseAspect(embed.aspectRatio) || ((embed.width && embed.height) ? (embed.width / embed.height) : (16/9));
       if (embed.responsive) {
         wrap.dataset.responsive = 'true';
-        const ar = parseAspect(embed.aspectRatio);
         wrap.style.setProperty('--map-aspect', ar);
-        const apply = () => {
-          container.style.width = '100%';
-          if (!CSS.supports('aspect-ratio: 1/1')) {
-            const h = Math.round(wrap.clientWidth / ar);
-            container.style.height = `${h}px`;
-          } else {
-            container.style.height = '100%';
-          }
-        };
-        apply();
-        window.addEventListener('resize', apply);
       }
+      const adjust = () => fixRoughmapInnerSize(container, wrap, ar);
+      adjust();
+      setTimeout(adjust, 300);
+      window.addEventListener('resize', adjust);
+      window.addEventListener('orientationchange', adjust);
     }).catch(() => {
-      // 로더가 없다면 조용히 패스 (콘솔 확인용으로 원하면 로그 추가)
+      // 로더가 없다면 조용히 패스 (필요 시 콘솔 로그)
       // console.warn('Kakao roughmap loader not available');
     });
   }
 
-  function waitForDaumRoughmap(timeout = 4000, interval = 50) {
+  function waitForDaumRoughmap(timeout = 8000, interval = 50) {
     return new Promise((resolve, reject) => {
       const start = Date.now();
       (function check() {
@@ -424,8 +404,6 @@
       })();
     });
   }
-
-
 
   /* ====== Auto Hide / Layout Normalize / Nav Pruning ====== */
   function isEmptyText(v) { return v == null || (typeof v === 'string' && v.trim() === ''); }
@@ -515,36 +493,22 @@
     document.querySelectorAll('.reveal').forEach(el => io.observe(el));
   }
 
+  /* ====== Hero Background (flicker-free) ====== */
   function setHeroBackground(src) {
     const el = document.querySelector('.hero-bg');
     if (!el || !src) return;
 
-    // 1) URL 정리 (따옴표/공백/괄호 등 안전하게)
     const url = String(src).trim();
-    // 절대경로만 쓰면 GitHub Pages 서브패스에서 404 날 수 있어요( /images/... 금지 )
-    // 가능하면 상대경로(images/hero.jpg) 또는 전체 https URL 사용 권장.
-
-    // 2) 먼저 현재 배경(플레이스홀더) 유지 → 새 이미지 사전 로딩
     const test = new Image();
 
     test.onload = () => {
-      // 성공한 경우에만 교체 (인라인 스타일이 CSS 변수보다 우선)
       el.style.backgroundImage = `url("${url.replace(/"/g, '\\"')}")`;
-      // 보조로 CSS 변수도 세팅(다른 곳에서 참조할 수 있으니)
       document.documentElement.style.setProperty('--hero-bg-url', `url("${url.replace(/"/g, '\\"')}")`);
-      el.classList.add('bg-ready'); // 필요 시 후처리 클래스
+      el.classList.add('bg-ready');
     };
+    test.onerror = () => { /* 실패 시 플레이스홀더 유지 */ };
 
-    test.onerror = () => {
-      // 실패하면 조용히 현재 배경 유지(사라지는 문제 방지)
-      // 콘솔만 참고하려면 주석 해제
-      // console.warn('Hero background failed to load:', url);
-    };
-
-    // mixed-content(HTTP) 차단 방지: 페이지가 https면 이미지도 https 권장
-    try {
-      test.referrerPolicy = 'no-referrer'; // 일부 CDN에서 리퍼러 문제 방지용
-    } catch(e) {}
+    try { test.referrerPolicy = 'no-referrer'; } catch(e) {}
     test.src = url;
   }
 
@@ -570,6 +534,25 @@
       const target = document.querySelector(id); if (!target) return;
       e.preventDefault();
       target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  }
+
+  /* ====== Kakao map inner size fixer ====== */
+  function fixRoughmapInnerSize(container, wrap, ar = 16/9) {
+    if (!container || !wrap) return;
+    let targetH;
+    if (CSS.supports('aspect-ratio: 1/1')) {
+      targetH = wrap.clientHeight;
+    } else {
+      targetH = Math.round(wrap.clientWidth / ar);
+    }
+    container.style.width = '100%';
+    container.style.height = targetH + 'px';
+
+    const innerCandidates = container.querySelectorAll('iframe, .wrap_map, .map_container');
+    innerCandidates.forEach(el => {
+      el.style.width = '100%';
+      el.style.height = '100%';
     });
   }
 })();
