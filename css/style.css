@@ -157,13 +157,30 @@ body {
 
 /* ========= Kakao Roughmap Responsive ========= */
 .map-embed { width: 100%; position: relative; }
-.map-embed[data-responsive="true"] { aspect-ratio: var(--map-aspect, 16/9); }
+.map-embed[data-responsive="true"] { aspect-ratio: var(--map-aspect, 16/9); min-height: 240px; } /* 높이 가드 */
 .map-embed[data-responsive="true"] > .root_daum_roughmap {
   position: absolute; inset: 0;
   width: 100% !important; height: 100% !important;
 }
+/* 지도 카드 스타일(둥근모서리+클리핑) */
+.media .map-embed {
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+}
+/* 내부 요소까지 100%로 강제(퍼가기 고정 px 무력화) */
+.map-embed .root_daum_roughmap,
+.map-embed .root_daum_roughmap * { box-sizing: border-box; }
+.map-embed .root_daum_roughmap,
+.map-embed .root_daum_roughmap iframe,
+.map-embed .root_daum_roughmap .wrap_map,
+.map-embed .root_daum_roughmap .map_container {
+  width: 100% !important;
+  height: 100% !important;
+}
+/* aspect-ratio 미지원 브라우저 폴백 */
 @supports not (aspect-ratio: 1/1) {
-  .map-embed[data-responsive="true"] { padding-top: 56.25%; } /* 16:9 */
+  .map-embed[data-responsive="true"] { padding-top: 56.25%; min-height: 0; } /* 16:9 */
   .map-embed[data-responsive="true"] > .root_daum_roughmap { position: absolute; inset: 0; }
 }
 
