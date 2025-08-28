@@ -368,46 +368,63 @@
 
     // 컨테이너 id는 timestamp로 강제 생성 (불일치 방지)
     const ts = String(embed.timestamp || '').trim();
+    if (!ts) return; // timestamp 없으면 종료
     const id = `daumRoughmapContainer${ts}`;
 
     if (window.SITE?.alt?.mapRegionLabel) {
       wrap.setAttribute('aria-label', window.SITE.alt.mapRegionLabel);
     }
 
+    // 컨테이너 생성
     const container = document.createElement('div');
     container.id = id;
     container.className = 'root_daum_roughmap root_daum_roughmap_landing';
     wrap.innerHTML = '';
     wrap.appendChild(container);
 
-    loadScriptOnce('https://ssl.daumcdn.net/dmaps/map_js_init/roughmapLoader.js', 'daum_roughmap_loader_script')
-      .then(() => {
-        new daum.roughmap.Lander({
-          "timestamp": ts,
-          "key": String(embed.key || ''),
-          "mapWidth": String(embed.width || 640),
-          "mapHeight": String(embed.height || 360)
-        }).render();
+    // roughmapLoader.js가 정적으로 로드될 때까지 대기
+    waitForDaumRoughmap().then(() => {
+      new daum.roughmap.Lander({
+        "timestamp": ts,
+        "key": String(embed.key || ''),
+        "mapWidth": String(embed.width || 640),
+        "mapHeight": String(embed.height || 360)
+      }).render();
 
-        if (embed.responsive) {
-          wrap.dataset.responsive = 'true';
-          const ar = parseAspect(embed.aspectRatio);
-          wrap.style.setProperty('--map-aspect', ar);
-          const apply = () => {
-            container.style.width = '100%';
-            if (!CSS.supports('aspect-ratio: 1/1')) {
-              const h = Math.round(wrap.clientWidth / ar);
-              container.style.height = `${h}px`;
-            } else {
-              container.style.height = '100%';
-            }
-          };
-          apply();
-          window.addEventListener('resize', apply);
-        }
-      })
-      .catch(() => {/* 조용히 패스 */});
+      // 반응형 처리
+      if (embed.responsive) {
+        wrap.dataset.responsive = 'true';
+        const ar = parseAspect(embed.aspectRatio);
+        wrap.style.setProperty('--map-aspect', ar);
+        const apply = () => {
+          container.style.width = '100%';
+          if (!CSS.supports('aspect-ratio: 1/1')) {
+            const h = Math.round(wrap.clientWidth / ar);
+            container.style.height = `${h}px`;
+          } else {
+            container.style.height = '100%';
+          }
+        };
+        apply();
+        window.addEventListener('resize', apply);
+      }
+    }).catch(() => {
+      // 로더가 없다면 조용히 패스 (콘솔 확인용으로 원하면 로그 추가)
+      // console.warn('Kakao roughmap loader not available');
+    });
   }
+
+  function waitForDaumRoughmap(timeout = 4000, interval = 50) {
+    return new Promise((resolve, reject) => {
+      const start = Date.now();
+      (function check() {
+        if (window.daum && window.daum.roughmap) return resolve();
+        if (Date.now() - start > timeout) return reject(new Error('timeout'));
+        setTimeout(check, interval);
+      })();
+    });
+  }
+
 
 
   /* ====== Auto Hide / Layout Normalize / Nav Pruning ====== */
