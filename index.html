@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <!-- 메타/OG/폰트/파비콘은 JS가 config.js 읽어서 주입 -->
+  <title></title>
+  <meta name="description" content="" />
+  <link rel="icon" href="" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <!-- 접근성: 키보드 사용자용 Skip 링크 -->
+  <a class="skip-link" href="#main"></a>
+
+  <header class="site-header">
+    <div class="container header-inner">
+      <a class="brand" href="#">
+        <img id="logoImg" src="" alt="" />
+        <span id="brandName"></span>
+      </a>
+
+      <button id="navToggle" class="nav-toggle" aria-expanded="false" aria-controls="siteNav" aria-label="">
+        ☰
+      </button>
+
+      <nav id="siteNav" class="site-nav" aria-label="">
+        <ul id="navList"></ul>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main">
+    <!-- Hero -->
+    <section class="hero section is-first" id="home" aria-label="">
+      <div class="hero-bg"></div>
+      <div class="container hero-inner">
+        <h1 id="heroHeadline"></h1>
+        <p id="heroSubhead"></p>
+        <div class="hero-ctas">
+          <a id="heroCta" class="btn btn-primary" href="#" role="button"></a>
+        </div>
+        <div id="partnerRow" class="partner-row" aria-label=""></div>
+      </div>
+    </section>
+
+    <!-- About -->
+    <section class="section" id="about" aria-label="">
+      <div class="container grid-2">
+        <div>
+          <h2 id="aboutTitle"></h2>
+          <p id="aboutBody"></p>
+          <ul id="aboutHighlights" class="checklist"></ul>
+        </div>
+        <figure class="media">
+          <img id="aboutImg" src="" alt="" />
+        </figure>
+      </div>
+    </section>
+
+    <!-- Products -->
+    <section class="section" id="products" aria-label="">
+      <div class="container">
+        <h2 id="productsTitle"></h2>
+        <p id="productsIntro" class="section-intro"></p>
+        <div id="productGrid" class="card-grid"></div>
+      </div>
+    </section>
+
+    <!-- Process -->
+    <section class="section muted" id="process" aria-label="">
+      <div class="container">
+        <h2 id="processTitle"></h2>
+        <div id="processList" class="step-grid"></div>
+      </div>
+    </section>
+
+    <!-- FAQ -->
+    <section class="section" id="faq" aria-label="">
+      <div class="container">
+        <h2 id="faqTitle"></h2>
+        <div id="faqList" class="faq-list"></div>
+      </div>
+    </section>
+
+    <!-- Contact -->
+    <section class="section" id="contact" aria-label="">
+      <div class="container grid-2">
+        <div>
+          <h2 id="contactTitle"></h2>
+          <p id="contactIntro"></p>
+          <ul class="contact-list">
+            <li><strong id="addrLabel"></strong><br><span id="contactAddress"></span></li>
+            <li><strong id="telLabel"></strong><br><a id="contactPhone" href=""></a></li>
+            <li><strong id="mailLabel"></strong><br><a id="contactEmail" href=""></a></li>
+          </ul>
+          <div class="contact-ctas">
+            <a id="contactCta" class="btn btn-primary" href=""></a>
+          </div>
+          <div class="socials" id="socialLinks"></div>
+        </div>
+        <figure class="media">
+          <!-- 이미지 약도 대신 카카오 Roughmap을 위한 자리 -->
+          <div id="mapEmbed" class="map-embed" role="region" aria-label=""></div>
+        </figure>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <small id="copyright"></small>
+      <div id="footerLinks" class="footer-links"></div>
+    </div>
+  </footer>
+
+  <!-- 인라인 법적 고지 다이얼로그(내용은 config.js에서 주입) -->
+  <dialog id="dlgPrivacy" class="legal-dialog">
+    <article>
+      <header><h3 id="privacyTitle"></h3></header>
+      <div id="privacyBody"></div>
+      <form method="dialog"><button id="privacyClose"></button></form>
+    </article>
+  </dialog>
+
+  <dialog id="dlgTerms" class="legal-dialog">
+    <article>
+      <header><h3 id="termsTitle"></h3></header>
+      <div id="termsBody"></div>
+      <form method="dialog"><button id="termsClose"></button></form>
+    </article>
+  </dialog>
+
+  <!-- 데이터 먼저 로드 → 스크립트 실행 -->
+  <script src="data/config.js"></script>
+  <script src="js/script.js"></script>
+</body>
+</html>
