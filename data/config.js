@@ -160,13 +160,12 @@ window.SITE = {
     /* Kakao Roughmap 임베드 (퍼가기 코드 값으로 교체) */
     mapEmbed: {
       type: "kakao-roughmap",
-      containerId: "daumRoughmapContainer1756355492605", // [수정] 제공된 컨테이너 ID
-      timestamp: "1756355492605",                         // [수정]
-      key: "84jwt2a4bsj",                                 // [수정]
-      width: 640,                                         // 초기 px (반응형이면 무시됨)
+      timestamp: "1756396923234",                         // ← 사용자가 준 값
+      key: "86u7qgi39wv",                                 // ← 사용자가 준 값
+      width: 640,
       height: 360,
-      responsive: true,                                   // [수정] 반응형 on/off
-      aspectRatio: "16:9"                                  // [수정] "4:3", "21:9" 등
+      responsive: true,
+      aspectRatio: "16:9"
     }
   },
 
