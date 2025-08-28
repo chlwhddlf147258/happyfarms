@@ -363,15 +363,19 @@
     const n = parseFloat(v); return isFinite(n) && n > 0 ? n : (16/9);
   }
   function renderMapEmbed(embed) {
-    const wrap = $('#mapEmbed');
+    const wrap = document.querySelector('#mapEmbed');
     if (!wrap || !embed || embed.type !== 'kakao-roughmap' || sectionEnabled('mapEmbed') === false) return;
+
+    // 컨테이너 id는 timestamp로 강제 생성 (불일치 방지)
+    const ts = String(embed.timestamp || '').trim();
+    const id = `daumRoughmapContainer${ts}`;
 
     if (window.SITE?.alt?.mapRegionLabel) {
       wrap.setAttribute('aria-label', window.SITE.alt.mapRegionLabel);
     }
 
     const container = document.createElement('div');
-    container.id = embed.containerId || `daumRoughmapContainer${embed.timestamp}`;
+    container.id = id;
     container.className = 'root_daum_roughmap root_daum_roughmap_landing';
     wrap.innerHTML = '';
     wrap.appendChild(container);
@@ -379,7 +383,7 @@
     loadScriptOnce('https://ssl.daumcdn.net/dmaps/map_js_init/roughmapLoader.js', 'daum_roughmap_loader_script')
       .then(() => {
         new daum.roughmap.Lander({
-          "timestamp": String(embed.timestamp || ''),
+          "timestamp": ts,
           "key": String(embed.key || ''),
           "mapWidth": String(embed.width || 640),
           "mapHeight": String(embed.height || 360)
@@ -402,8 +406,9 @@
           window.addEventListener('resize', apply);
         }
       })
-      .catch(() => { /* 로더 실패 시 조용히 패스 */ });
+      .catch(() => {/* 조용히 패스 */});
   }
+
 
   /* ====== Auto Hide / Layout Normalize / Nav Pruning ====== */
   function isEmptyText(v) { return v == null || (typeof v === 'string' && v.trim() === ''); }
